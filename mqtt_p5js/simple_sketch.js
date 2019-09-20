@@ -29,6 +29,9 @@ function setup() {
 
     // 8 analoge kanaler
     for (var i = 0; i < 8; i++){
+      var msgList = [];
+      analogMessages.push(msgList);
+
       var number = i.toString();
       var s = "analog" + number;
       analogList.push(s);
@@ -38,6 +41,9 @@ function setup() {
 
     // 2 digitale kanaler
     for (var i = 0; i < 2; i++){
+      var msgList = [];
+      digitalMessages.push(msgList);
+
       var number = i.toString();
       var s = "digital" + number;
       digitalList.push(s);
@@ -52,6 +58,9 @@ function setup() {
     console.log("analogList: ", analogList);
     console.log("digitalList: ", digitalList);
 
+    console.log("analogMessages: ", analogMessages);
+    console.log("digitalMessages: ", digitalMessages);
+
   });
 
   // HER FORTÆLLER VI AT VI VIL MODTAGE BESKEDERNE I VORES FUNKTION: messageReceived()
@@ -65,28 +74,74 @@ function setup() {
 
 
   createCanvas(windowWidth, windowHeight);
+
+  textSize(20);
+  textAlign(CENTER, CENTER);
+
 }
 
 function draw() {
 
+  // altid 33 - bare fordi
   background(33);
 
   var width = windowWidth;
   var height = windowHeight;
 
-  var sclX = width / 5;
-  var sclY = height / 2;
+  // width divided by 10 so we know how wide each box in the sketch can be
+  var sclX = width / 10;
+  var half = sclX * 0.5;
 
-  // LOOP I GENNEM DE FØSTE 5 ANALOGE ARRAYS
-  for (var i = 0; i < 5; i++){
-    var numMsgs = analogMessages[i].length;
+  // draw lines to separate channels
+  for (var i = 1; i < 10; i++){
+    stroke(255);
+    noFill();
+    line(sclX * i, 0, sclX * i, height);
+  }
 
-    for (var j = 0; j < numMsgs; j++){
-      var msg = analogMessages[i][j];
-      console.log("msg: ", msg);
+  // ved brug af modulo, opdateres hver "kasse" kun hvert 2. sekund
+  //if (frameCount % 120 == 0){
+
+    // loop igennem alle analoge kanaler og hver enkelt besked i kanalens liste
+    for (var i = 0; i < analogMessages.length; i++){
+
+      stroke(255);
+      fill(255);
+      text("Analog " + i.toString(), sclX * i + half, 20);
+
+      var list = analogMessages[i];
+
+      for (var j = 0; j < list.length; j++){
+        
+        var msg = list[j];
+        console.log("msg: ", msg);
+      
+      }
+
     }
 
-  }
+    // loop igennem alle analoge kanaler og hver enkelt besked i kanalens liste
+    for (var i = 0; i < digitalMessages.length; i++){
+      var list = digitalMessages[i];
+      // drawing a transparent white square to highlight digital channels a bit
+      noStroke();
+      fill(255, 20);
+      rect(sclX * (i + analogMessages.length), 0, sclX, height);
+
+      stroke(255);
+      fill(255);
+      text("Digital " + i.toString(), sclX * (i + analogMessages.length) + half, 20);
+
+      for (var j = 0; j < list.length; j++){
+
+        var msg = list[j];
+        console.log("msg: ", msg);
+
+      }
+
+    }
+
+  //}
 
 }
 
