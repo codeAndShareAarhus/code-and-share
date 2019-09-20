@@ -36,7 +36,7 @@ function setup() {
       var s = "analog" + number;
       analogList.push(s);
       client.subscribe(s);
-      publishMessage(s, "hej");
+      publishMessage(s, "2000");
     }
 
     // 2 digitale kanaler
@@ -48,7 +48,7 @@ function setup() {
       var s = "digital" + number;
       digitalList.push(s);
       client.subscribe(s);
-      publishMessage(s, "hej");
+      publishMessage(s, "-1");
     }
 
     // testkanaler
@@ -82,72 +82,100 @@ function setup() {
 
 function draw() {
 
-  // altid 33 - bare fordi
+  // DEBUG - send et 1 til en tilfædig analog kanal 1 gange i sekundet
+  if (frameCount % 60 == 0) {
+    var rnd = Math.floor(Math.random() * analogList.length);
+    var topic = analogList[rnd];
+    publishMessage(topic, "1");
+  }
+
+  // altid 33 - bare fordi!
   background(33);
 
   var width = windowWidth;
   var height = windowHeight;
 
-  // width divided by 10 so we know how wide each box in the sketch can be
+  // divider vidde med 10 for at finde ud af, hvor bred en række må være
   var sclX = width / 10;
   var half = sclX * 0.5;
+  var lineHeight = 30;
 
-  // draw lines to separate channels
+  for (var i = 0; i < 10; i++) {
+    noStroke();
+    fill(255 / 10 * i, 255 / 8 * (i % 8), 255, 180);
+    rect(sclX * i, 0, sclX, height);
+  }
+
+  var cols = height / lineHeight;
+
+  // transparente rektangler for læsbarheden
+  for (var i = 0; i < cols; i++){
+    if (i % 2 == 0) {
+      noStroke();
+      fill(0, 100);
+      rect(0, 0 + i * lineHeight, width, lineHeight);
+    }
+  }
+
+  // loop igennem alle analoge kanaler og hver enkelt besked i kanalens liste
+  for (var i = 0; i < analogMessages.length; i++){
+    stroke(255);
+    fill(255);
+    text("Analog " + i.toString(), sclX * i + half, 17);
+    var list = analogMessages[i];
+    // loop baglæns igennem listen af beskeder for at vise den nyeste øverst!
+    for (var j = list.length-1; j >= 0; j--){
+      var msg = list[j];
+      // console.log("msg: ", msg);
+      text(msg, sclX * i + half, 17 + (lineHeight * (j+1) ));
+    }
+  }
+
+  // loop igennem alle analoge kanaler og hver enkelt besked i kanalens liste
+  for (var i = 0; i < digitalMessages.length; i++){
+    var list = digitalMessages[i];
+    stroke(255);
+    fill(255);
+    text("Digital " + i.toString(), sclX * (i + analogMessages.length) + half, 17);
+    for (var j = list.length-1; j >= 0; j--){
+      var msg = list[j];
+      // console.log("msg: ", msg);
+      text(msg, sclX * (i + analogMessages.length) + half, 17 + (lineHeight * (j+1) ));
+    }
+  }
+
+  // tegn linjer imellem rækker
   for (var i = 1; i < 10; i++){
     stroke(255);
     noFill();
     line(sclX * i, 0, sclX * i, height);
   }
 
-  // ved brug af modulo, opdateres hver "kasse" kun hvert 2. sekund
-  //if (frameCount % 120 == 0){
+  cleanMessageLists();
 
-    // loop igennem alle analoge kanaler og hver enkelt besked i kanalens liste
-    for (var i = 0; i < analogMessages.length; i++){
+}
 
-      stroke(255);
-      fill(255);
-      text("Analog " + i.toString(), sclX * i + half, 20);
-
-      var list = analogMessages[i];
-
-      for (var j = 0; j < list.length; j++){
-        
-        var msg = list[j];
-        console.log("msg: ", msg);
-      
-      }
-
+// Den her funktion sørger for at mængden af beskeder, som bliver vist aldrig overstiger X
+function cleanMessageLists() {
+  for (var i = 0; i < analogMessages.length; i++) {
+    var len = analogMessages[i].length;
+    if (len > 25) {
+      analogMessages[i].splice(analogMessages[i].length-1, 1);
     }
+  }
 
-    // loop igennem alle analoge kanaler og hver enkelt besked i kanalens liste
-    for (var i = 0; i < digitalMessages.length; i++){
-      var list = digitalMessages[i];
-      // drawing a transparent white square to highlight digital channels a bit
-      noStroke();
-      fill(255, 20);
-      rect(sclX * (i + analogMessages.length), 0, sclX, height);
-
-      stroke(255);
-      fill(255);
-      text("Digital " + i.toString(), sclX * (i + analogMessages.length) + half, 20);
-
-      for (var j = 0; j < list.length; j++){
-
-        var msg = list[j];
-        console.log("msg: ", msg);
-
-      }
-
+  for (var i = 0; i < digitalMessages.length; i++) {
+    var len = digitalMessages[i].length;
+    if (len > 25) {
+      digitalMessages[i].splice(digitalMessages[i].length-1, 1);
     }
-
-  //}
+  }
 
 }
 
 // DEN HER FUNKTION KALDER VI NÅR VI VIL SENDE EN BESKED
 function publishMessage(topic, message){
-    client.publish(String(topic), String(message));
+  client.publish(String(topic), String(message));
 }
 
 // DEN HER FUNKTION SKYDER HVER GANG VI MODTAGER EN BESKED
@@ -158,17 +186,39 @@ function messageReceived(t, m){
   var i = topic.substring(topic.length-1);
   var index = parseInt(i);
 
+  // find typen af topic ved at se på første karakter af et topic
   var typeOfTopic = topic.substring(0, 1);
 
+  // hvis karakteren er et a, så er det analog kanal
   if (typeOfTopic == "a") {
     console.log("topic is analog");
+
+    // find ud af hvilket topic der er tale om ved at se på sidste karakter
+    // karakteren vil korrespondere med et index i listen over topics
+
+    val = parseInt(message);
+    // console.log("val: ", val);
     val = constrain(val, 0, 1023);
-    val = val * 0.0009777;
+    // val = val * 0.000977;
+    val = val / 1023;
+    val = val.toFixed(2);
+
+    // smid værdien i listen over beskeder for den pågældende kanal
+    analogMessages[i].unshift(val);
+
   }
 
   if (typeOfTopic == "d") {
     console.log("topic is digital");
-    val = constrain(message, 0, 1);
+
+    var topicNum = parseInt(topic[topic.length -1]);
+
+    val = parseInt(message);
+    // console.log("val: ", val);
+    val = constrain(val, 0, 1);
+
+    digitalMessages[i].unshift(val);
+
   }
 
   console.log('topic: ', topic, 'message: ', message);
