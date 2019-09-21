@@ -39,15 +39,18 @@ void connect();
 
 void setup() {
   Serial.begin(115200);
+
   // Starting wifi and mqtt clients
   WiFi.begin(ssid, pass);
   client.begin("broker.shiftr.io", net);
 
   // Assign a function that will trigger when receiving messages
   client.onMessage(messageReceived);
+
  // Connects to wifi and mqtt broker
   connect();
 }
+
 // Connects to wifi and mqtt if not connected
 // Writes "..." untill the device has connected
 void connect() {
@@ -69,7 +72,7 @@ void connect() {
   Serial.println("\nconnected!");
 
 // Uncomment next line to subcribe/listen to a topic
-// client.subscribe("/etTopic");
+// client.subscribe("/aTopic");
 
 }
 
