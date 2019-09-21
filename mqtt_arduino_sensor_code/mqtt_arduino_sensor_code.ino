@@ -23,7 +23,7 @@ const char key[] = "";
 // Enter secret/password fra shiftr
 const char secret[] = "";
 // Choose a client ID
-const char clintID[] = "";
+const char clientID[] = "";
 
 
 WiFiClient net;
@@ -33,6 +33,7 @@ unsigned long lastMillis = 0;
 
 void connect();
 
+// Use A0 for analog sensors and D0 for digial sensors
 int sensorPin = A0;
 int sensorValue;
 
@@ -87,8 +88,10 @@ void loop() {
   }
 
   // Chooses a topic to publish our value to
-  String topic = "/analogSensorTestTopic";
+  String topic = "/sensorExampleTopic";
   // Reads the value of our sensor
+  // Use analogRead() with analog sensors and digitaRead with digital sensors
+  // This needs to match the type of pin you choose in the top of the sketch
   sensorValue = analogRead(sensorPin);
   // Casts the value to a Starting
   String stringValue = String(sensorValue);
