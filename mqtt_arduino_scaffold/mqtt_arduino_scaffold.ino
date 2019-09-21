@@ -6,23 +6,26 @@
 //
 // by Joël Gähwiler
 // https://github.com/256dpi/arduino-mqtt
+//
+// Modified by Nikolaj Mikkelsen
 
 
 
-//Inkluderer de anvendte libraries
+// Includes wifi and mqtt libraries
 #include <ESP8266WiFi.h>
 #include <MQTTClient.h>
 
-// indtast wifi navn
+// Enter wifi credentials
 const char ssid[] = "";
 // indtast wifi kode
 const char pass[] = "";
 
-// indtast 'key/username' fra shiftr
+// Enter 'key/username' from shiftr
 const char key[] = "";
-// indtast secret/password fra shiftr
+// Enter secret/password fra shiftr
 const char secret[] = "";
-// Deklarere variabler til MQTT og Net (Vi bruger til at forbinde til internettet og bruge mqtt)
+// Choose a client ID
+const char clintID[] = "";
 
 
 WiFiClient net;
@@ -36,16 +39,19 @@ void connect();
 
 void setup() {
   Serial.begin(115200);
-  // Her starter vi WIFI og client
+  // Starting wifi and mqtt clients
   WiFi.begin(ssid, pass);
   client.begin("broker.shiftr.io", net);
-  // når clienten modtager en besked, skal den sende beskeden videre til funktionen 8messageReceived)
+
+  // Assign a function that will trigger when receiving messages
   client.onMessage(messageReceived);
- // Forbinder til wifi og broker
+ // Connects to wifi and mqtt broker
   connect();
 }
-// Tjekker Wifi-status (skriver '...' indtil ESP'en er forbundet)
+// Connects to wifi and mqtt if not connected
+// Writes "..." untill the device has connected
 void connect() {
+  // Connects to wifi
   Serial.print("checking wifi...");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
@@ -53,16 +59,17 @@ void connect() {
   }
 
   Serial.print("\nconnecting...");
-  // når klienten er forbundet giver den klient navn+usr+token
-  while (!client.connect("arduino", key, secret)){
+
+  // Connects to mqtt
+  while (!client.connect(clientID, key, secret)){
     Serial.print(".");
     delay(1000);
   }
-// Skriver serielt når der er forbundet til internettet og broker
-  Serial.println("\nconnected!");
-//Forbinder til den adresse som der skal læses beskeder fra
-  client.subscribe("");
 
+  Serial.println("\nconnected!");
+
+// Uncomment next line to subcribe/listen to a topic
+// client.subscribe("/etTopic");
 
 }
 
@@ -74,15 +81,19 @@ void loop() {
     connect();
   }
 
-  // Skriver på adressen(topic)  og sender beskeden(message)
-  publishMessage("", "");
+  // Publish a message to a topic
+  // The function must be given strings
+  // Use the String() funcion to cast values of other types
+  publishMessage("topic", "message");
   delay(500);
 }
-//Deklarere funktionen for at sende beskeden til (topic,message)
+
+// The function that publishes the messages to the mqtt broker
 void publishMessage(String topic, String message){
   client.publish(topic, message);
 }
-// læser beskeder fra de subscribede topics (adresser)
+
+// The function that handles receiving messages
 void messageReceived(String &topic, String &payload) {
   Serial.println("incoming: " + topic + " - " + payload);
 }
