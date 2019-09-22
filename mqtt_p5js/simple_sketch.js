@@ -12,6 +12,8 @@ var digitalList = [];
 var analogMessages = [];
 var digitalMessages = [];
 
+var debug = false;
+
 function setup() {
 
   // MQTT TING START
@@ -36,7 +38,7 @@ function setup() {
       var s = "analog" + number;
       analogList.push(s);
       client.subscribe(s);
-      publishMessage(s, "2000");
+      publishMessage(s, "512");
     }
 
     // 2 digitale kanaler
@@ -50,10 +52,6 @@ function setup() {
       client.subscribe(s);
       publishMessage(s, "-1");
     }
-
-    // testkanaler
-    client.subscribe("lightSensor");
-    client.subscribe("flexSensor");
 
     console.log("analogList: ", analogList);
     console.log("digitalList: ", digitalList);
@@ -83,10 +81,12 @@ function setup() {
 function draw() {
 
   // DEBUG - send et 1 til en tilfædig analog kanal 1 gange i sekundet
-  if (frameCount % 60 == 0) {
-    var rnd = Math.floor(Math.random() * analogList.length);
-    var topic = analogList[rnd];
-    publishMessage(topic, "1");
+  if(debug) {
+    if (frameCount % 60 == 0) {
+      var rnd = Math.floor(Math.random() * analogList.length);
+      var topic = analogList[rnd];
+      publishMessage(topic, "512");
+    }
   }
 
   // altid 33 - bare fordi!
@@ -197,7 +197,7 @@ function messageReceived(t, m){
     // karakteren vil korrespondere med et index i listen over topics
 
     val = parseInt(message);
-    // console.log("val: ", val);
+     console.log("val: ", val);
     val = constrain(val, 0, 1023);
     // val = val * 0.000977;
     val = val / 1023;
