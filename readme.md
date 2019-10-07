@@ -18,7 +18,7 @@ Open the preferences by clicking ```File``` -> ```Preferences```. Insert the fol
 Then open ```Tools```-> ```Board:...```->```Boards Manager```. Search for "esp" and install the package named "esp8266 by ESP8266 Community".
 
 ### 3: Install wifi and mqtt libraries
-Go to ```Sketch``` -> ```Include Library```-> ```Manage Libraries`` and install the library named "MQTT by Joel Gaehwiler".
+Go to ```Sketch``` -> ```Include Library```-> ```Manage Libraries``` and install the library named "MQTT by Joel Gaehwiler".
 
 ### 4: Install drivers
 Finally we need to install drivers so our computers can communicate with the arduino. Newer versions of the OS on macbooks should support these boards out of the box and will not need a driver. Check to see if you can communicate with the board before installing anything.
